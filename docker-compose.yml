@@ -1,0 +1,22 @@
+version: '2'
+services:
+  rclone:
+    image: rclone:latest
+    env_file:
+      - ./env/sample.env
+    command: 
+    container_name: rclone
+    cap_add:
+      - MKNOD
+      - SYS_ADMIN
+    restart: always
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
+    tty: true
+    ulimits:
+      nproc: 65535
+      nofile:
+          soft: 49999
+          hard: 99999
