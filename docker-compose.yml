@@ -3,8 +3,10 @@ services:
   rclone:
     image: rclone:latest
     env_file:
-      - ./env/sample.env
-    command: 
+      - ./env/example.env
+    command: bash
+    ports:
+      - "2849:2849"
     container_name: rclone
     cap_add:
       - MKNOD

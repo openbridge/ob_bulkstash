@@ -1,7 +1,7 @@
 
 
 # Bulk Stash - Batch processing for cloud storage
-Bulk Stash is a service to sync, or copy, files between different storage services. For example, you can copy files either to or from a remote storage services like Amazon S3 to Google Cloud Storage, or locally from your laptop to a remote storage. Bulk Stash is a dockerized version of rclone.
+Bulk Stash is an `rclone` service to sync, or copy, files between different storage services. For example, you can copy files either to or from a remote storage services like Amazon S3 to Google Cloud Storage, or locally from your laptop to a remote storage. Bulk Stash is a dockerized version of rclone.
 You can also use this for copying or syncing files locally to a remote SFTP server or between two remote SFTP servers.
 
 ![rclone](/rclone.png "How It Works")
@@ -17,6 +17,7 @@ There are advanced use cases where you can actually transfer a certain class of 
 * **Runtime**: You can run a collection of containers running independent tasks via config files. This means you can wrap the Docker service with other apps like bash, python and so forth on your host
 * **Deployment**: You can setup things like Amazon Lambda and ECS tasks to control the runtime tasks. Configurations can be encrypted and stored in a service like AWS KMS. Configuration attributes can then be provided by an end user via a front-end web app. For example, you can have a form that collects all the S3 or Google OAuth tokens. A front end is not include :)
 * **Notifications**: You can uses services like cronalarm, Cronitor.io, healthchecks.io...to set status and alerts. Notifications via Slack, Hipchat... are also possible, but not enabled.
+* **Folder Size Monitoring**: Local source folders can be monitored. If the size of the contents in the source folder exceed a value you set an rclone copy operation will occur
 
 ### Features
 * MD5/SHA1 hashes checked at all times for file integrity
@@ -130,6 +131,9 @@ docker run \
 Lastly, you can use Docker Compose:
 ```bash
 docker-compose up -d
+```
+```bash
+/usr/local/bin/docker-compose -f prod.yml up -d --remove-orphans
 ```
 Note: You will need to put the appropriate command in the compose YAML file you want docker rclone to run.
 
@@ -269,7 +273,7 @@ rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
 
 
 # Why Use ENV variables?
-This docker rclone image is focused on separating configuration from the runtime. This does not preclude using a traditional config file. Feel free to go down that path if it makes sense to you. The image would support it.
+This docker image uses rclone and is focused on separating configuration from the runtime. This does not preclude using a traditional config file. Feel free to go down that path if it makes sense to you. The image would support it.
 
 ## Config Syntax
 * Each config statement has `RCLONE_`. It is the prefix for each variable.
@@ -293,7 +297,7 @@ Copy files from remote location locally:
 
 Docker Tag | Git Hub Release | rclone | Alpine Version
 ---------- | --------------- | -------- | --------------
-latest     | Master          | 1.3.7   | 3.6
+latest     | Master          | latest   | 3.6
 
 # Docs
 For more examples on configuration and rclone commands please refer to the docs:
