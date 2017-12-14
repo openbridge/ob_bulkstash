@@ -49,7 +49,15 @@ There are advanced use cases where you can actually transfer a certain class of 
 For the items in **bold** there are sample commands and configurations in the readme.
 
 # Getting Started
-To get started we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
+
+First, pull the latest docker image:
+
+```bash
+docker pull openbridge/ob_bulkstash
+```
+
+Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
+
 
 ## Amazon and Google Examples
 In our example we have a source of files at Amazon S3 and destination for those files at Google Cloud Storage location. This means we will need to set the configuration ENV variables for source and destination.
