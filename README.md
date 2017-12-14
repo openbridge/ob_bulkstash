@@ -145,7 +145,7 @@ These are a couple of simple examples around wrapping the Docker image with Bash
 This example will go through all the env files and run the image with a `COPY` command:
 ```bash
 for i in ./env/*.env; do
-docker run -v /my/volume:/data -it --env-file ${i} openbridge/rclone rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
+docker run -v /my/volume:/data -it --env-file ${i} openbridge/ob_bulkstash rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
 done
 ```
 
@@ -154,7 +154,7 @@ Here is an example that mounts the Google auth file needed for service level acc
 ```bash
 for i in ./env/prod/*.env; do
   echo "working on $i"
-  bash -c "docker run -it -v /auth/prod/auth.json:/auth.json --env-file ${i} openbridge/rclone rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/"
+  bash -c "docker run -it -v /auth/prod/auth.json:/auth.json --env-file ${i} openbridge/ob_bulkstash rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/"
   if [[ $? = 0 ]]; then echo "OK: "; else echo "ERROR: "; fi
 done
 ```
