@@ -24,14 +24,14 @@ echo "OK: Setting the crontab file now..."
 cat << EOF > /cron/crontab.conf
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c /rclone.sh 2>&1
+${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c "/rclone.sh run" 2>&1
 EOF
 else
 echo "OK: Setting the crontab file with healthchecks now..."
 cat << EOF > /cron/crontab.conf
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c /rclone.sh && curl -fsS --retry 3 ${RCLONE_CROND_HEALTHCHECK_URL} > /dev/null
+${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c "/rclone.sh run" && curl -fsS --retry 3 ${RCLONE_CROND_HEALTHCHECK_URL} > /dev/null
 EOF
 fi
 
