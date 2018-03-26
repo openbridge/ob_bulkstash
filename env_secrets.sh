@@ -19,11 +19,11 @@ env_secret_expand() {
     var="$1"
     eval val=\$$var
     if secret_name=$(expr match "$val" "{{DOCKER-SECRET:\([^}]\+\)}}$"); then
-        relative=$(dirname "${secret_name}")
-        if [ "${relative}" = "." ]; then
-            secret="${ENV_SECRETS_DIR}/${secret_name}"
-        else
+        absolute=$(expr substr "${secret_name}" 1 1)
+        if [ "${absolute}" = "/" ]; then
             secret=${secret_name}
+        else
+            secret="${ENV_SECRETS_DIR}/${secret_name}"
         fi
         env_secret_debug "Secret file for $var: $secret"
         if [ -f "$secret" ]; then
