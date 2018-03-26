@@ -20,7 +20,7 @@ env_secret_debug() {
 env_secret_expand() {
     var="$1"
     eval val=\$$var
-    if secret_name=$(expr match "$val" "{{DOCKER-SECRET:\([^}]\+\)}}$"); then
+    if secret_name=$(expr match "$val" "DOCKER-SECRET::\(.*\)$"); then
         absolute=$(expr substr "${secret_name}" 1 1)
         if [ "${absolute}" = "/" ]; then
             secret=${secret_name}

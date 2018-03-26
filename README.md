@@ -292,11 +292,11 @@ This docker image uses rclone and is focused on separating configuration from th
 ## Using Docker Secrets
 Environment variables can be formed to point at the content of Docker secrets
 files, so as to avoid giving away sensitive information. Any environment
-variable which value looks like the following `{{DOCKER-SECRET:<path>}}` (note
-the leading and ending curly braces and the leading `DOCKER-SECRET:` keyword)
-will be replaced by the content of the file at `<path>` if it exists. Relative
-paths are automatically resolved to `/run/secrets` (the default path for Docker
-secrets), but absolute paths can also be used.
+variable which value looks like the following `DOCKER-SECRET::<path>` (note the
+leading `DOCKER-SECRET` keyword and the double colon `::`) will be replaced by
+the content of the file at `<path>` if it exists. Relative paths are
+automatically resolved to `/run/secrets` (the default path for Docker secrets),
+but absolute paths can also be used.
 
 # Performance Tips
 These tips come from  http://moo.nac.uci.edu/~hjm/HOWTO-rclone-to-Gdrive.html
