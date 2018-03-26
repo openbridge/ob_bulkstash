@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# The biggest bulk of this code originates from
+# https://medium.com/@basi/docker-environment-variables-expanded-from-secrets-8fa70617b3bc
 : ${ENV_SECRETS_DEBUG:=""}
 : ${ENV_SECRETS_DIR:=/run/secrets}
 
