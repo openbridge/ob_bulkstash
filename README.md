@@ -289,6 +289,15 @@ This docker image uses rclone and is focused on separating configuration from th
 * The last part is the formal configuration attribute. For example, `TYPE`, `ACCESS_KEY_ID` or `SERVER_SIDE_ENCRYPTION` are standard config elements for s3 rclone. Normally be prefixed like this: `--type`
 * You need to make sure `{{NAME}}` is unique to avoid any collisions in your configs. For example, you cant have multiple `RCLONE_CONFIG_MYS3` statements. If you have multiple S3 locations do something like `RCLONE_CONFIG_MYS3-01`, `RCLONE_CONFIG_MYS3-02` and `RCLONE_CONFIG_MYS3-03`
 
+## Using Docker Secrets
+Environment variables can be formed to point at the content of Docker secrets
+files, so as to avoid giving away sensitive information. Any environment
+variable which value looks like the following `{{DOCKER-SECRET:<path>}}` (note
+the leading and ending curly braces and the leading `DOCKER-SECRET:` keyword)
+will be replaced by the content of the file at `<path>` if it exists. Relative
+paths are automatically resolved to `/run/secrets` (the default path for Docker
+secrets), but absolute paths can also be used.
+
 # Performance Tips
 These tips come from  http://moo.nac.uci.edu/~hjm/HOWTO-rclone-to-Gdrive.html
 
