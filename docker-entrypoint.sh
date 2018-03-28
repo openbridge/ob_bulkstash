@@ -3,6 +3,10 @@
 set -o nounset
 set -o pipefail
 
+# Make sure we always have a healthcheck URL, but empty unless specified
+: ${RCLONE_CROND_HEALTHCHECK_URL:=""}
+
+
 function crond() {
 
 if [[ -n "$RCLONE_CROND_SOURCE_PATH" ]] || [[ -n "$RCLONE_CROND_DESTINATION_PATH" ]]; then
