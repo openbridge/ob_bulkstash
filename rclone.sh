@@ -2,6 +2,9 @@
 
 # Get the env variables so crond has them
 source /cron/rclone.env
+# Possibly convert docker secrets marked variables.
+source /env_secrets.sh
+
 
 function check {
     "$@"
