@@ -1,0 +1,12 @@
+#!/bin/bash
+
+RCLONE_REPO="ncw/rclone"
+RELEASES=$(curl -qsL https://api.github.com/repos/${RCLONE_REPO}/tags | grep \"name\"|sed "s/^ *\"name\" *: *\"v\(\([0-9]\+\.\)\+[0-9]\+\\)\" *,/\1/g")
+
+IMG=$(basename $DOCKER_REPO)
+for tag in ${RELEASES}; do
+    echo "============== Pushing ${IMG}:$tag"
+    docker push ${DOCKER_REPO}:$tag
+done
+echo "============== Pushing ${IMG}:latest"
+docker push ${DOCKER_REPO}:latest
