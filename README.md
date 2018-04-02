@@ -314,7 +314,10 @@ Copy files from remote location locally:
 
 Docker Tag | Git Hub Release | rclone | Alpine Version
 ---------- | --------------- | -------- | --------------
-latest     | Master          | latest   | 3.6
+latest     | Master          | latest   | 3.7
+
+Additional versions are tagged and available for use: [Get Docker Hub Tagged Versions](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/)
+
 
 # Docs
 For more examples on configuration and rclone commands please refer to the docs:
