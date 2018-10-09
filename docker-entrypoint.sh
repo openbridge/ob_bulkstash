@@ -8,7 +8,7 @@ set -o pipefail
 
 function crond() {
 
-if [[ -n "$RCLONE_CROND_SOURCE_PATH" ]] || [[ -n "$RCLONE_CROND_DESTINATION_PATH" ]]; then
+if [[ -n "${RCLONE_CROND_SOURCE_PATH:-}" ]] || [[ -n "${RCLONE_CROND_DESTINATION_PATH:-}" ]]; then
 
 echo "OK: Source and destination environment variables for rclone and crond are present. Configuring..."
 
