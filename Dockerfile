@@ -6,6 +6,7 @@ ENV RCLONE_TYPE="amd64"
 
 RUN set -x \
     && apk update \
+    && apk add python3 \
     && apk add --no-cache --virtual .persistent-deps \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/community \
         bash \
