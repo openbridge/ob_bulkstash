@@ -1,4 +1,5 @@
-
+# The original repo for this container
+The original repo for this container lives in: https://github.com/openbridge/ob_bulkstash/pull/6
 
 # Bulk Stash - Batch processing for cloud storage
 Bulk Stash is an `rclone` service to sync, or copy, files between different storage services. For example, you can copy files either to or from a remote storage services like Amazon S3 to Google Cloud Storage, or locally from your laptop to a remote storage. Bulk Stash is a dockerized version of rclone.
