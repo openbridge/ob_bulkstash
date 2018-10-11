@@ -4,19 +4,17 @@ MAINTAINER Thomas Spicer <thomas@openbridge.com>
 ENV RCLONE_VERSION="current"
 ENV RCLONE_TYPE="amd64"
 ENV BUILD_DEPS \
-      wget@community \
-      linux-headers@community \
-      unzip@community \
-      fuse@community
-
+      wget \
+      linux-headers \
+      unzip \
+      fuse
 RUN set -x \
-    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk update \
     && apk add --no-cache --virtual .persistent-deps \
-        bash@community \
-        curl@community \
-        monit@community \
-        ca-certificates@community \
+       bash \
+       curl \
+       monit \
+       ca-certificates \
     && apk add --no-cache --virtual .build-deps \
         $BUILD_DEPS \
     && cd /tmp  \
