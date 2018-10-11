@@ -1,10 +1,11 @@
 # Bulk Stash - Batch processing for cloud storage
 Bulk Stash is an `rclone` service to sync, or copy, files between different storage services. For example, you can copy files either to or from a remote storage services like Amazon S3 to Google Cloud Storage, or locally from your laptop to a remote storage. Bulk Stash is a dockerized version of rclone.
+
 You can also use this for copying or syncing files locally to a remote SFTP server or between two remote SFTP servers.
 
 ![rclone](https://github.com/openbridge/ob_bulkstash/raw/develop/rclone.png "How It Works")
 
-There are advanced use cases where you can actually transfer a certain class of files (CSV) to Amazon S3 for import into Amazon Redshift, BigQuery or Amazon Athena. If you are interested in learning more reach out.
+There are advanced use cases where you can actually transfer a certain class of files (CSV) to Amazon S3 for import into Amazon Redshift, BigQuery or Amazon Athena. If you are interested in learning check out this [blog post](https://blog.openbridge.com/how-to-setup-a-batch-data-pipeline-for-csv-files-8c4d0cd7394b).
 
 # Features
 * **Dockerized**: `rclone` is neatly packed into a Docker image that can be run anywhere Docker can be installed.
@@ -53,9 +54,13 @@ First, pull the latest docker image:
 ```bash
 docker pull openbridge/ob_bulkstash
 ```
+This will pull the latest version by default. However, as part of the `hooks/build` process we publish a number of older versions of rclone. If you want to see the available versions, check out Docker Hub [`openbridge/ob_bulkstash`](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/). For example, if you wanted to run version `1.19`, then pull that version like this:
 
-Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
+```bash
+docker pull openbridge/ob_bulkstash:1.19
+```
 
+Got your version setup? Great. Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
 
 ## Amazon and Google Examples
 In our example we have a source of files at Amazon S3 and destination for those files at Google Cloud Storage location. This means we will need to set the configuration ENV variables for source and destination.
@@ -206,10 +211,12 @@ RCLONE_CROND_DESTINATION_PATH=MYS3:myawsbucket/path/to/file/
 This will ensure that `rclone` knows where to look for the files and where you want them delivered.
 
 # Setting Up SFTP Remotes
-You can setup SFTP remotes. This allows you to upload or download files from an SFTP server. You can also do server to server transfers between two remotes. Lastly, if you want to pipeline data to Redshift, BigQuery, Athena or Spectrum via `rclone` this would be the path you would take following this documentation:
- https://github.com/openbridge/openbridge.github.io/blob/master/pipeline.md
+You can setup SFTP remotes. This allows you to upload or download files from an SFTP server. You can also do server to server transfers between two remotes.
 
- If you have any questions about how to pipeline data to a warehouse let me know.
+Lastly, if you want to pipeline data to Redshift, BigQuery, Athena or Spectrum via rclone take a look at the following batch data pipeline workflow:
+* https://blog.openbridge.com/how-to-setup-a-batch-data-pipeline-for-csv-files-8c4d0cd7394b
+
+If you have any questions about how to pipeline data to a warehouse let me know.
 
 Sample config
 * `RCLONE_CONFIG_MYSFTP_TYPE=sftp`
@@ -312,10 +319,9 @@ Copy files from remote location locally:
 
 Docker Tag | Git Hub Release | rclone | Alpine Version
 ---------- | --------------- | -------- | --------------
-latest     | Master          | latest   | 3.7
+latest*     | develop         | latest   | latest
 
-Additional versions are tagged and available for use: [Get Docker Hub Tagged Versions](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/)
-
+Additional versions are tagged and available for use: [https://hub.docker.com/r/openbridge/ob_bulkstash/tags/](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/)
 
 # Docs
 For more examples on configuration and rclone commands please refer to the docs:
