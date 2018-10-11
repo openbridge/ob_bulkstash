@@ -31,12 +31,15 @@ RUN set -x \
     && rm -rf /var/cache/apk/* \
     && apk del .build-deps
 
+RUN pip3 install boto3
+
 COPY monit.d/ /etc/monit.d/
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY rclone.sh /rclone.sh
 COPY env_secrets.sh /env_secrets.sh
 
 COPY wrapper.py /
+COPY getParameterSecrets.py /
 RUN chmod +x wrapper.py
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

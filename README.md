@@ -17,6 +17,8 @@ To run this container, Run this container with the following command:
 Input should be a JSON string like the example below.
 The keys of the dictionary vary with "type" and can be used either in source or destination
 
+- Any parameter can be fetched from SSM PARAMETER STORE, by specifying the value in the dictionary like `ssm://hierarchical.path.to.value`
+
 Example:
 ```
 {
