@@ -1,5 +1,3 @@
-
-
 # Bulk Stash - Batch processing for cloud storage
 Bulk Stash is an `rclone` service to sync, or copy, files between different storage services. For example, you can copy files either to or from a remote storage services like Amazon S3 to Google Cloud Storage, or locally from your laptop to a remote storage. Bulk Stash is a dockerized version of rclone.
 You can also use this for copying or syncing files locally to a remote SFTP server or between two remote SFTP servers.
