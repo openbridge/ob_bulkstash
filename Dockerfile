@@ -3,22 +3,22 @@ MAINTAINER Thomas Spicer <thomas@openbridge.com>
 
 ENV RCLONE_VERSION="current"
 ENV RCLONE_TYPE="amd64"
+ENV BUILD_DEPS \
+      wget@community \
+      linux-headers@community \
+      unzip@community \
+      fuse@community
 
 RUN set -x \
+    && echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
     && apk update \
-    && apk add python3 \
     && apk add --no-cache --virtual .persistent-deps \
-        --repository http://dl-cdn.alpinelinux.org/alpine/edge/community \
-        bash \
-        curl \
-        monit \
-        ca-certificates \
+        bash@community \
+        curl@community \
+        monit@community \
+        ca-certificates@community \
     && apk add --no-cache --virtual .build-deps \
-        --repository http://dl-cdn.alpinelinux.org/alpine/edge/community \
-        wget \
-        linux-headers \
-        unzip \
-        fuse \
+        $BUILD_DEPS \
     && cd /tmp  \
     && wget -q http://downloads.rclone.org/rclone-${RCLONE_VERSION}-linux-${RCLONE_TYPE}.zip \
     && unzip /tmp/rclone-${RCLONE_VERSION}-linux-${RCLONE_TYPE}.zip \
@@ -31,16 +31,10 @@ RUN set -x \
     && rm -rf /var/cache/apk/* \
     && apk del .build-deps
 
-RUN pip3 install boto3
-
 COPY monit.d/ /etc/monit.d/
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY rclone.sh /rclone.sh
 COPY env_secrets.sh /env_secrets.sh
-
-COPY wrapper.py /
-COPY getParameterSecrets.py /
-RUN chmod +x wrapper.py
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [""]
