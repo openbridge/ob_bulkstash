@@ -36,5 +36,8 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY rclone.sh /rclone.sh
 COPY env_secrets.sh /env_secrets.sh
 
+COPY wrapper.py /
+RUN chmod +x wrapper.py
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [""]
