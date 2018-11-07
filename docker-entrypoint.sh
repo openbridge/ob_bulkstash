@@ -80,8 +80,9 @@ run="monit -c /etc/monitrc" && bash -c "${run}"
 #---------------------------------------------------------------------
 
 function run() {
-crond
-monit
+
+if [[ ! -z "${RCLONE_CROND_SCHEDULE:-}" ]]; then crond && monit; fi
+
 }
 
 run
