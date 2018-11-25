@@ -3,6 +3,3 @@ check process crond with pidfile /run/crond.pid
     stop program = "/bin/bash -c 'pkill crond'"
     if cpu > 90% for 8 cycles then restart
     if 5 restarts within 5 cycles then timeout
-
-check program foldersize with path "/bin/bash -c '/rclone.sh foldersize'"
-    if status != 0 for 2 cycles then exec "/usr/bin/env bash -c '/rclone.sh rclone'"

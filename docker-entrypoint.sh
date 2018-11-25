@@ -12,39 +12,58 @@ set -o pipefail
 
 function crond() {
 
-if [[ -n "${RCLONE_CROND_SOURCE_PATH:-}" ]] || [[ -n "${RCLONE_CROND_DESTINATION_PATH:-}" ]]; then
+if [[ -f ${RCLONE_CRONFILE} ]]; then
 
-    # Create the environment file for crond
-    if [[ ! -d /cron ]]; then mkdir -p /cron; fi
+  # If using your own cron config, use that now else we create one for you
+   RCLONE_CRONFILE=/cron/crontab.conf
+   export RCLONE_CRONFILE
 
-    # Create the environment file for crond
-    printenv | sed 's/^\([a-zA-Z0-9_]*\)=\(.*\)$/export \1="\2"/g' | grep -E "^export RCLONE" > /cron/rclone.env
+  else
+
+  # For the use of /rclone.sh and crond
+
+  if [[ -n "${RCLONE_CROND_SOURCE_PATH:-}" ]] || [[ -n "${RCLONE_CROND_DESTINATION_PATH:-}" ]]; then
+
     if [[ ! -f /cron/rclone.env ]]; then exit 1; fi
+    if [[ ! -d /cron ]]; then mkdir -p /cron; fi
 
     # Set a default if a schedule is not present
     if [[ -z "${RCLONE_CROND_SCHEDULE:-}" ]]; then RCLONE_CROND_SCHEDULE="0 0 * * *" && export RCLONE_CROND_SCHEDULE; fi
+
+    if [[ ! -z ${RCLONE_CROND_SOURCE_SIZE} ]]; then
+      {
+        echo 'check program foldersize with path "/bin/bash -c '/rclone.sh foldersize'"'
+        echo '    if status != 0 for 2 cycles then exec "/usr/bin/env bash -c '/rclone.sh run'"'
+      } | tee /etc/monit.d/check_foldersize
+    fi
 
     if [[ -z ${RCLONE_CROND_HEALTHCHECK_URL:-} ]]; then
       {
         echo 'SHELL=/bin/bash'
         echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-        echo '${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c "/rclone.sh run" 2>&1'
-      } | tee /cron/crontab.conf
+        echo '{{RCLONE_CROND_SCHEDULE}} /usr/bin/env bash -c "/rclone.sh run" 2>&1'
+      } | tee ${RCLONE_CRONFILE}
+
+      sed -i 's|{{RCLONE_CROND_SCHEDULE}}|'"${RCLONE_CROND_SCHEDULE}"'|g' ${RCLONE_CRONFILE}
     else
       {
         echo 'SHELL=/bin/bash'
         echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-        echo '${RCLONE_CROND_SCHEDULE} /usr/bin/env bash -c "/rclone.sh run" && curl -fsS --retry 3'
-        echo '${RCLONE_CROND_HEALTHCHECK_URL} > /dev/null'
-      } | tee /cron/crontab.conf
+        echo '{{RCLONE_CROND_SCHEDULE}} /usr/bin/env bash -c "/rclone.sh run" && curl -fsS --retry 3'
+        echo '{{RCLONE_CROND_HEALTHCHECK_URL}} > /dev/null'
+      } | tee ${RCLONE_CRONFILE}
+
+      sed -i 's|{{RCLONE_CROND_SCHEDULE}}|'"${RCLONE_CROND_SCHEDULE}"'|g' ${RCLONE_CRONFILE}
+      sed -i 's|{{RCLONE_CROND_HEALTHCHECK_URL}}|'"${RCLONE_CROND_HEALTHCHECK_URL}"'|g' ${RCLONE_CRONFILE}
     fi
 
-    if [[ ! -f /cron/crontab.conf ]]; then exit 1; fi
-    # Add the crond config
-    cat /cron/crontab.conf | crontab - && crontab -l
-    # Start crond
-    runcrond="crond -b" && bash -c "${runcrond}"
+    if [[ ! -f ${RCLONE_CRONFILE} ]]; then exit 1; fi
+
+  fi
 fi
+
+# Load crontab config and start RCLONE_CROND_DESTINATION_PATH
+if [[ -f ${RCLONE_CRONFILE} ]]; then cat ${RCLONE_CRONFILE} | crontab - && crontab -l && runcrond="crond -b" && bash -c "${runcrond}"; fi
 
 }
 
@@ -81,7 +100,7 @@ run="monit -c /etc/monitrc" && bash -c "${run}"
 
 function run() {
 
-if [[ ! -z "${RCLONE_CROND_SCHEDULE:-}" ]]; then crond && monit; fi
+if [[ ! -z "${RCLONE_CROND_SCHEDULE:-}" ]] || [[ ! -z "${RCLONE_CRONFILE:-}" ]]; then crond && monit; fi
 
 }
 

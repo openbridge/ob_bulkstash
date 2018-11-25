@@ -125,31 +125,17 @@ With your config setup, now you can run `rclone`!
 This is an example Docker `RUN` command
 ```bash
 docker run \
-  -e RCLONE_CONFIG_MYS3_TYPE=s3 \
-  -e RCLONE_CONFIG_MYS3_ACCESS_KEY_ID= \
-  -e RCLONE_CONFIG_MYS3_SECRET_ACCESS_KEY= \
-  -e RCLONE_CONFIG_MYS3_SERVER_SIDE_ENCRYPTION=AES256 \
-  -e RCLONE_CONFIG_MYS3_STORAGE_CLASS=REDUCED_REDUNDANCY \
-  -e RCLONE_CONFIG_MYGS_TYPE=google cloud storage \
-  -e RCLONE_CONFIG_MYGS_CLIENT_ID= \
-  -e RCLONE_CONFIG_MYGS_CLIENT_SECRET= \
-  -e RCLONE_CONFIG_MYGS_PROJECT_NUMBER= \
-  -e RCLONE_CONFIG_MYGS_SERVICE_ACCOUNT_FILE= \
-  -e RCLONE_CONFIG_MYGS_TOKEN= \
-  rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
-```
-This example uses an ENV file:
-```bash
-docker run \
   --env-file env/sample.env \
   rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
 ```
-
+Check out the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for the latest syntax.
 
 Lastly, you can use Docker Compose:
 ```bash
 docker-compose up -d
 ```
+or
+
 ```bash
 /usr/local/bin/docker-compose -f prod.yml up -d --remove-orphans
 ```
@@ -179,14 +165,72 @@ done
 # Using `crond` Inside Docker
 If you want to persist your container you can set it up to always be running with `crond` as a background process. While most everything is automated there are a few configuration items you need to set.
 
-## Step 1
+## Bring Your Own Crontab Configuration
 
-You need to set environment variables to correctly run `crond` as a background process
+### Step 1: Setup your `crontab.conf` config
+Running `crond` requires a proper configuration file. You can easily add a crontab config file and have the container use it. A `crontab.conf` should look something like this:
+
+```bash
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/15 * * * * /usr/bin/env bash -c /rclone.sh run 2>&1
+```
+
+### Step 2: Mount your `crontab.conf` config
+Now, you will want to mount your config file from your host into the container. This example shows the mount in docker compose format:
+```docker
+volumes:
+  - /Github/ob_bulkstash/cron/crontab.conf:/cron/crontab.conf
+```
+If will look the same if you are doing it via Docker run:
+```docker
+-v /Github/ob_bulkstash/cron/crontab.conf:/cron/crontab.conf
+```
+Mounting your config makes it available to the startup service within your container.
+
+
+### Step 3: Set environment variable `RCLONE_CRONFILE`
+In your `ENV` make sure to set the path to the location you are mounting you `crontab.conf` file. In our example we are using `/cron/crontab.conf`. This means you set the `ENV` path like this:
+```
+RCLONE_CRONFILE=/cron/crontab.conf
+```
+
+
+
+## Using `/rclone.sh` and `crond` Inside Docker
+
+Included in the image is a utility script that will run `rclone copy` and `rclone move`. It will also has a `foldersize` check in the event you want to trigger a `rclone move`. How is this helpful? If your disk is getting full this can trigger what amounts to be a cleanup task.  
+
+### Getting Started with `/rclone.sh`
+If you want the image to use `/rclone.sh` make sure the required environment variables are set correctly. In your `ENV`, you need to set the following:
 
 * `RCLONE_CROND_SCHEDULE` crontab schedule `* * * * *` to perform sync every midnight
 * `RCLONE_CROND_SOURCE_PATH` source location for `rclone copy` command
 * `RCLONE_CROND_DESTINATION_PATH` destination location for `rclone copy` command
-* `RCLONE_CROND_HEALTHCHECK_URL` used for healthcheck services to ping status like cronalarm, Cronitor.io, healthchecks.io...
+
+#### Setting Source and Destination
+In your environment file you need to make sure your source and destination remotes are set. You need to put the full statement (remote names, buckets, paths...) for the source and destination for each variable.
+```bash
+RCLONE_CROND_SOURCE_PATH="/temp"
+RCLONE_CROND_DESTINATION_PATH="MYS3:myawsbucket/path/to/file/"
+```
+This will ensure that `rclone` knows where to look for the files and where you want them delivered.
+
+
+This is what it would look like in your config:
+```bash
+RCLONE_CROND_SCHEDULE=*/5 * * * *
+RCLONE_CROND_SOURCE_PATH="/tmp"
+RCLONE_CROND_DESTINATION_PATH="MYS3:ob-testing/ebs"
+```
+
+### Optional Settings
+
+#### Health check service
+
+`RCLONE_CROND_HEALTHCHECK_URL`
+If you want to use a cron healthcheck service, set the environment variable:
+* `RCLONE_CROND_HEALTHCHECK_URL` used for health check services to ping status like cronalarm, Cronitor.io, healthchecks.io...
 
 This is what it would look like in your config:
 ```bash
@@ -195,27 +239,26 @@ RCLONE_CROND_SOURCE_PATH="/tmp"
 RCLONE_CROND_DESTINATION_PATH="MYS3:ob-testing/ebs"
 RCLONE_CROND_HEALTHCHECK_URL=https://hchk.io/asads-aa12-ee23-qqw1-543e4c2ddv54385
 ```
-Your crontab config file is generated automatically for you based on `RCLONE_CROND_SCHEDULE` and will look like this:
+#### How to monitor the size of your source directory
+You can use a `foldersize` check to monitor your source path. To do this set the environment variable `RCLONE_CROND_SOURCE_SIZE` to a number in megabytes. For example, if you want to monitor your source path for 1 GB of files, you would set `RCLONE_CROND_SOURCE_SIZE=1000`. The 1000 megabytes = 1 GB.
+
+
+```bash
+RCLONE_CROND_SCHEDULE=*/5 * * * *
+RCLONE_CROND_SOURCE_PATH="/tmp"
+RCLONE_CROND_DESTINATION_PATH="MYS3:ob-testing/ebs"
+RCLONE_CROND_SOURCE_SIZE="1000"
+```
+
+## IMPORTANT
+Please note that if you set your own crontab config file via `RCLONE_CRONFILE=/cron/crontab.conf` it will take precedent over anything you set in these environment variables. The answer is simply to include all of these in your own config
+
 ```bash
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-*/5 * * * * /usr/bin/env bash -c /rclone.sh 2>&1
+*/5 * * * * /usr/bin/env bash -c "/rclone.sh run" && curl -fsS --retry 3
+https://hchk.io/asads-aa12-ee23-qqw1-543e4c2ddv54385 > /dev/null
 ```
-The only thing you should change is the `RCLONE_CROND_SCHEDULE` run times like `*/15 * * * *` to `5 12 * * *` or whatever you prefer. Leave everything else as is.
-
-## Step 2
-In your environment file you need to make sure your source and destination remotes are set:
-```
-RCLONE_CROND_SOURCE_PATH=/temp
-RCLONE_CROND_DESTINATION_PATH=MYS3:myawsbucket/path/to/file/
-```
-You need to put the full statement (remote names, buckets, paths...) for the source and destination for each variable. For example:
-```
-RCLONE_CROND_SOURCE_PATH=/temp
-RCLONE_CROND_DESTINATION_PATH=MYS3:myawsbucket/path/to/file/
-```
-
-This will ensure that `rclone` knows where to look for the files and where you want them delivered.
 
 # Setting Up SFTP Remotes
 You can setup SFTP remotes. This allows you to upload or download files from an SFTP server. You can also do server to server transfers between two remotes.

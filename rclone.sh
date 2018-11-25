@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
 # Get the env variables so crond has them
+
+# Create the environment file for crond
+printenv | sed 's/^\([a-zA-Z0-9_]*\)=\(.*\)$/export \1="\2"/g' | grep -E "^export RCLONE" > /cron/rclone.env
+
 source /cron/rclone.env
+
 # Possibly convert docker secrets marked variables.
-source /env_secrets.sh
+#source /env_secrets.sh
 
 
-function check {
+function check (){
     "$@"
     local status=$?
     if [ $status -ne 0 ]; then
@@ -25,7 +30,8 @@ function check {
     return $status
 }
 
-function rclone-copy {
+function rclone_copy () {
+
 (
   flock -n 200 || exit 1
   sync_command="rclone copy ${RCLONE_CROND_SOURCE_PATH} ${RCLONE_CROND_DESTINATION_PATH}"
@@ -39,10 +45,11 @@ function rclone-copy {
   fi
   echo "Executing => $sync_command"
   eval "$sync_command" || send
-) 200>/tmp/rclone.lock
+) 200>/run/rclone.lock
+
 }
 
-function rclone-move {
+function rclone_move () {
 (
   flock -n 200 || exit 1
   sync_command="rclone move ${RCLONE_CROND_SOURCE_PATH} ${RCLONE_CROND_DESTINATION_PATH}"
@@ -56,7 +63,7 @@ function rclone-move {
   fi
   echo "Executing => $sync_command"
   eval "$sync_command" || send
-) 200>/tmp/rclone.lock
+) 200>/run/rclone.lock
 }
 
 function foldersize {
@@ -65,19 +72,17 @@ if [[ -z $RCLONE_CROND_SOURCE_PATH ]] || [[ -z $RCLONE_CROND_SOURCE_SIZE ]]; the
 else
    SIZE=$(/usr/bin/du -s ${RCLONE_CROND_SOURCE_PATH} | /usr/bin/awk '{print $1}')
    MBSIZE=$((SIZE / 1024))
-   echo "$RCLONE_CROND_SOURCE_PATH - $MBSIZE MB"
-   rclone-move
+   echo "$RCLONE_CROND_SOURCE_PATH is $MBSIZE MB"
    if [[ $MBSIZE -gt $(( ${RCLONE_CROND_SOURCE_SIZE} )) ]]; then
-     exit 1
+     rclone_move
    fi
 fi
 }
 
 function run() {
-      check
-      rclone-copy
+      check "$@"
+      rclone_copy
       foldersize
-      echo "OK: All rclone tasks have completed."
 }
 
 "$@"
