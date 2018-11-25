@@ -175,26 +175,38 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 */15 * * * * /usr/bin/env bash -c /rclone.sh run 2>&1
 ```
+There is a sample of this in `cron/crontab.conf`. You can use this as a starting point for your own config. Once you have your config ready, we can move to Step 2.
 
 ### Step 2: Mount your `crontab.conf` config
-Now, you will want to mount your config file from your host into the container. This example shows the mount in docker compose format:
+Next, you will want to mount your config file. The config is on your host, not in the container. To get it into your container you need to mount it from your host into the container.
+
+The basic template is this:
+
+```docker
+-v /path/to/the/file/on/your/host/crontab.conf:/where/we/mount/in/container/crontab.conf
+```
+
+This example shows the mount your config in docker compose format:
 ```docker
 volumes:
   - /Github/ob_bulkstash/cron/crontab.conf:/cron/crontab.conf
 ```
-If will look the same if you are doing it via Docker run:
+It will look the same if you are doing it via Docker run:
 ```docker
 -v /Github/ob_bulkstash/cron/crontab.conf:/cron/crontab.conf
 ```
-Mounting your config makes it available to the startup service within your container.
+In those examples, the `crontab.conf` located in my local GitHub folder will get mounted inside the container at `/cron/crontab.conf`
+
+Mounting your config makes it available to the startup service within your container. If you are unfamiliar with `-v` or `volumes`, check the docs from Docker.
 
 
 ### Step 3: Set environment variable `RCLONE_CRONFILE`
-In your `ENV` make sure to set the path to the location you are mounting you `crontab.conf` file. In our example we are using `/cron/crontab.conf`. This means you set the `ENV` path like this:
+In your `ENV` make sure to set the path to the location you are mounting your `crontab.conf` file. In our example above we are using `/cron/crontab.conf`. This means you set the `ENV` path like this:
 ```
 RCLONE_CRONFILE=/cron/crontab.conf
 ```
 
+**This is the location in your container, not the host**
 
 
 ## Using `/rclone.sh` and `crond` Inside Docker
