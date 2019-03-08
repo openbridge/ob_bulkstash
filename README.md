@@ -57,14 +57,14 @@ docker pull openbridge/ob_bulkstash
 This will pull the latest version by default. However, as part of the `hooks/build` process we publish a number of older versions of rclone. If you want to see the available versions, check out Docker Hub [`openbridge/ob_bulkstash`](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/). For example, if you wanted to run version `1.19`, then pull that version like this:
 
 ```bash
-docker pull openbridge/ob_bulkstash:1.19
+docker pull openbridge/ob_bulkstash:1.46
 ```
 Additional pre-built versions are tagged and available for use: https://hub.docker.com/r/openbridge/ob_bulkstash/tags/
 
 If you want to build your own image, you need to pass the version you want to use:
 ```bash
-docker build --build-arg RCLONE_VERSION=1.44 -t openbridge/ob_bulkstash:1.44 .
-docker build --build-arg RCLONE_VERSION=1.44 -t openbridge/ob_bulkstash:latest .
+docker build --build-arg RCLONE_VERSION=1.46 -t openbridge/ob_bulkstash:1.46 .
+docker build --build-arg RCLONE_VERSION=1.46 -t openbridge/ob_bulkstash:latest .
 ```
 Got your version setup? Great. Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
 
