@@ -1,7 +1,7 @@
 #!/bin/bash
 
 RCLONE_REPO="ncw/rclone"
-RELEASES=$(curl -qsL https://api.github.com/repos/${RCLONE_REPO}/tags | grep \"name\"|sed "s/^ *\"name\" *: *\"v\(\([0-9]\+\.\)\+[0-9]\+\\)\" *,/\1/g")
+RELEASES=$(curl -qsL https://api.github.com/repos/${RCLONE_REPO}/tags | grep \"name\" | sed -ne 's/[^0-9]*\(\([0-9]\.\)\{0,4\}[0-9][^.]\).*/\1/p')
 DOCKER_REPO="openbridge/ob_bulkstash"
 IMG=$(basename $DOCKER_REPO)
 for tag in ${RELEASES}; do

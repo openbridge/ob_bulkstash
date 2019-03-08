@@ -381,7 +381,7 @@ Copy files from remote location locally:
 
 Docker Tag | Git Hub Release | rclone | Alpine Version
 ---------- | --------------- | -------- | --------------
-latest*     | develop         | latest   | 3.8
+latest*     | develop         | latest   | 3.9.x
 
 Additional versions are tagged and available for use: [https://hub.docker.com/r/openbridge/ob_bulkstash/tags/](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/)
 

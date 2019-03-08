@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.9
 MAINTAINER Thomas Spicer <thomas@openbridge.com>
 
 ARG RCLONE_VERSION="current"
