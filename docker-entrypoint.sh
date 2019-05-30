@@ -24,7 +24,7 @@ if [[ -f ${RCLONE_CRONFILE} ]]; then
 
   if [[ -n "${RCLONE_CROND_SOURCE_PATH:-}" ]] || [[ -n "${RCLONE_CROND_DESTINATION_PATH:-}" ]]; then
 
-    if [[ ! -f /cron/rclone.env ]]; then exit 1; fi
+    #if [[ ! -f /cron/rclone.env ]]; then exit 1; fi
     if [[ ! -d /cron ]]; then mkdir -p /cron; fi
 
     # Set a default if a schedule is not present
