@@ -32,7 +32,9 @@ RUN set -x \
 COPY monit.d/ /etc/monit.d/
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY rclone.sh /rclone.sh
+COPY rcron.sh /usr/bin/rcron
 COPY env_secrets.sh /env_secrets.sh
+RUN chmod +x /docker-entrypoint.sh /usr/bin/rcron
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [""]

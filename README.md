@@ -54,20 +54,30 @@ First, pull the latest docker image:
 ```bash
 docker pull openbridge/ob_bulkstash
 ```
-This will pull the latest version by default. However, as part of the `hooks/build` process we publish a number of older versions of rclone. If you want to see the available versions, check out Docker Hub [`openbridge/ob_bulkstash`](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/). For example, if you wanted to run version `1.19`, then pull that version like this:
+This will pull the latest version by default. However, as part of the `hooks/build` process we publish a number of older versions of rclone. If you want to see the available versions, check out Docker Hub [`openbridge/ob_bulkstash`](https://hub.docker.com/r/openbridge/ob_bulkstash/tags/). For example, if you wanted to run version `1.47`, then pull that version like this:
 
 ```bash
-docker pull openbridge/ob_bulkstash:1.46
+docker pull openbridge/ob_bulkstash:1.47.0
 ```
 Additional pre-built versions are tagged and available for use: https://hub.docker.com/r/openbridge/ob_bulkstash/tags/
 
 If you want to build your own image, you need to pass the version you want to use:
 ```bash
-docker build --build-arg RCLONE_VERSION=1.46 -t openbridge/ob_bulkstash:1.46 .
-docker build --build-arg RCLONE_VERSION=1.46 -t openbridge/ob_bulkstash:latest .
+docker build --build-arg RCLONE_VERSION=1.47.0 -t openbridge/ob_bulkstash:1.46 .
+docker build --build-arg RCLONE_VERSION=1.47.0 -t openbridge/ob_bulkstash:latest .
 ```
 Got your version setup? Great. Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
 
+### Testing Your Build
+The validate that your build worked correctly, you can run a simple check which will have rclone echo the version back to you.
+
+If you run this `docker run openbridge/ob_bulkstash rclone -V` you should see the version displayed like this:
+```Bash
+rclone v1.47.0
+- os/arch: linux/amd64
+- go version: go1.12.4
+```
+If you see this, success! Your image is ready to go!
 
 ## Amazon and Google Examples
 In our example we have a source of files at Amazon S3 and destination for those files at Google Cloud Storage location. This means we will need to set the configuration ENV variables for source and destination.
@@ -124,7 +134,7 @@ With your config setup, now you can run `rclone`!
 
 This is an example Docker `RUN` command
 ```bash
-docker run \
+docker run openbridge/ob_bulkstash \
   --env-file env/sample.env \
   rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
 ```
@@ -152,6 +162,10 @@ for i in ./env/*.env; do
 docker run -v /my/volume:/data -it --env-file ${i} openbridge/ob_bulkstash rclone copy MYS3:myawsbucket/path/to/file/ MYGS:mygooglebucket/path/to/files/
 done
 ```
+Earlier we showed a simple rclone command to echo the version number:
+```bash
+docker run openbridge/ob_bulkstash rclone -V
+```
 
 ### Using the Google AUTH file
 Here is an example that mounts the Google auth file needed for service level accounts:
@@ -165,7 +179,17 @@ done
 # Using `crond` Inside Docker
 If you want to persist your container you can set it up to always be running with `crond` as a background process. While most everything is automated there are a few configuration items you need to set.
 
-## Bring Your Own Crontab Configuration
+**IMPORTANT**: This assumes you have a basic understanding of Docker and background processes. If you do not know what `--detach , -d` means then please review the Docker docs about running in detached mode (hint: this is how you run things in the background)
+
+## Runtime Environment
+Depending on your use of `CROND`, it may not have access to the OS defined `ENV` variables. As a convenience, the image will output these to a file:
+
+```bash
+printenv | sed 's/^\([a-zA-Z0-9_]*\)=\(.*\)$/export \1="\2"/g' | grep -E "^export RCLONE" > /cron/rclone.env
+```
+If needed, you can then import these variables into any scripts that you want to run in the container such as using something like `source /cron/rclone.env`.
+
+## Option 1: Bring Your Own Crontab Configuration
 
 ### Step 1: Setup your `crontab.conf` config
 Running `crond` requires a proper configuration file. You can easily add a crontab config file and have the container use it. A `crontab.conf` should look something like this:
@@ -209,12 +233,84 @@ RCLONE_CRONFILE=/cron/crontab.conf
 **This is the location in your container, not the host**
 
 
-## Using `/rclone.sh` and `crond` Inside Docker
+## Option 2: Automatic Generation `RCLONE_CRONFILE`
 
-Included in the image is a utility script that will run `rclone copy` and `rclone move`. It will also has a `foldersize` check in the event you want to trigger a `rclone move`. How is this helpful? If your disk is getting full this can trigger what amounts to be a cleanup task.  
+You can let the image generate and run a command for you under `CROND`.
+This is geared to running a single `CROND` task. If you want to run multiple tasks, it is best to choose **Option 1** which allows you more control over the number of tasks run.
+
+### Setting your `CROND` command
+In your ENV, you need to set the desired command via `RCLONE_SYNC_COMMAND`. Here is an example command:
+
+```bash
+docker run -d -e RCLONE_SYNC_COMMAND="*/15 * * * * /usr/bin/env bash -c /foo run" openbridge/ob_bulkstash crond -f
+```
+This will result in your container running in the detached mode (in the background) with a `CROND` entry like this:
+```bash
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/15 * * * * /usr/bin/env bash -c /foo run
+```
+This is just an example command, it will likely vary according to what you are looking too run.
+
+
+## IMPORTANT `crontab.conf` NOTE
+Please note that if you set your own crontab config file via `RCLONE_CRONFILE=/cron/crontab.conf` it will take precedent over anything you pass via `-e` or set other environment variables.
+
+## Understanding How To Run Docker and `CROND`
+Here are a few examples of running Docker and `CROND` in the background. You can accomplish the same using `docker-compose`
+
+Running in detached mode:
+```bash
+docker run -d -e RCLONE_SYNC_COMMAND="*/15 * * * * /usr/bin/env bash -c /foo run" openbridge/ob_bulkstash crond -f
+```
+You can see the process running in the background:
+```bash
+PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
+ 31     0 root     R     1528   0%   3   0% top
+  1     0 root     S     1516   0%   1   0% crond -f
+```
+Running in detached mode using the `rcron.sh` helper script. This will use Monit has the background process monitor to make sure `CROND` is always running:
+```bash
+docker run -d -e RCLONE_SYNC_COMMAND="*/15 * * * * /usr/bin/env bash -c /foo run" openbridge/ob_bulkstash rcron start
+```
+You can see the process running in the background:
+```bash
+PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
+ 21     1 root     S     4788   0%   2   0% monit -Iv -c /etc/monitrc -l /dev/null
+  1     0 root     S     2172   0%   3   0% bash /usr/bin/rcron start
+ 23     0 root     R     1524   0%   2   0% top
+ 20     1 root     S     1516   0%   0   0% crond -b
+ ```
+Here is another example running Monit as the controlling process:
+```bash
+docker run -d -e RCLONE_SYNC_COMMAND="*/15 * * * * /usr/bin/env bash -c /foo" openbridge/ob_bulkstash monit -Iv -c /etc/monitrc -l /dev/null
+```
+You can see the process running in the background:
+```bash
+PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
+  1     0 root     S     4788   0%   2   0% monit -Iv -c /etc/monitrc -l /dev/null
+ 22     0 root     R     1528   0%   1   0% top
+ 21     1 root     S     1516   0%   3   0% crond -b
+ ```
+
+ Hopefully you get the point on how to do this. You have options, just make sure you understand the basics on how to run Docker in various contexts.
+
+# Creating Your Own Scripts: The `/rclone.sh` Example
+
+Included in the image is a utility script. You can use this as a robust example for creating your own. It highlights the potential to mount scripts like this into your container to run different types of operations.
+
+**Note**: `rclone.sh` is provided as-is and has not been fully tested. Think of it as a proof-of-concept, not something you should blindly use.
+
+## Overview
+The script shows an example of how to run `rclone copy` and `rclone move`. It will also has a `foldersize` check in the event you want to trigger a `rclone move`. How is this helpful? If your disk is getting full this can trigger what amounts to be a cleanup task.  
 
 ### Getting Started with `/rclone.sh`
-If you want the image to use `/rclone.sh` make sure the required environment variables are set correctly. In your `ENV`, you need to set the following:
+While the image contains `rclone.sh`, you will likely want to mount your own version of the script. For example;
+```
+-v /path/to/the/file/on/your/host/script.sh:/path/in/container/script.sh
+```
+
+Also, you need to make sure the image can use `/rclone.sh`. This means you need to make sure any required environment variables are set correctly. For example, in your `ENV`, you need to set the following for `rclone.sh`:
 
 * `RCLONE_CROND_SCHEDULE` crontab schedule `* * * * *` to perform sync every midnight
 * `RCLONE_CROND_SOURCE_PATH` source location for `rclone copy` command
@@ -262,15 +358,6 @@ RCLONE_CROND_DESTINATION_PATH="MYS3:ob-testing/ebs"
 RCLONE_CROND_SOURCE_SIZE="1000"
 ```
 
-## IMPORTANT
-Please note that if you set your own crontab config file via `RCLONE_CRONFILE=/cron/crontab.conf` it will take precedent over anything you set in these environment variables. The answer is simply to include all of these in your own config
-
-```bash
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-*/5 * * * * /usr/bin/env bash -c "/rclone.sh run" && curl -fsS --retry 3
-https://hchk.io/asads-aa12-ee23-qqw1-543e4c2ddv54385 > /dev/null
-```
 
 # Setting Up SFTP Remotes
 You can setup SFTP remotes. This allows you to upload or download files from an SFTP server. You can also do server to server transfers between two remotes.
@@ -300,9 +387,14 @@ List a remote drive  like this: `rclone lsd {remote name}:`
 Replace `{remote name}` with your actual remote name. Using our Amazon example it would look like this
 `rclone lsd MYS3:`
 
+Using Docker this is a possible way to run the command:
+```bash
+docker run -env-file /env/my.env openbridge/ob_bulkstash rclone lsd MYS3:
+```
+
 This will output your remote buckets like this:
 
-```
+```bash
           -1 2017-04-11 16:38:05        -1 athena-lambda
           -1 2016-12-04 14:32:54        -1 aws-athena-query
           -1 2016-12-17 14:19:23        -1 aws-logs
