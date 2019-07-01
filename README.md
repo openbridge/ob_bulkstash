@@ -66,6 +66,8 @@ If you want to build your own image, you need to pass the version you want to us
 docker build --build-arg RCLONE_VERSION=1.47.0 -t openbridge/ob_bulkstash:1.46 .
 docker build --build-arg RCLONE_VERSION=1.47.0 -t openbridge/ob_bulkstash:latest .
 ```
+You may also pass a different architecture: `--build-arg RCLONE_TYPE=arm`
+
 Got your version setup? Great. Next, we need to define a configuration for remote storage locations. The following demonstrates how to sync Amazon and Google cloud storages.
 
 ### Testing Your Build
