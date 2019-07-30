@@ -14,6 +14,7 @@ RUN set -x \
        bash \
        curl \
        monit \
+       tzdata \
        ca-certificates \
     && apk add --no-cache --virtual .build-deps \
         $BUILD_DEPS \
